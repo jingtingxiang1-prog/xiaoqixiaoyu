@@ -5212,7 +5212,11 @@ input:checked + .slider:before {
         <span style="font-weight: 500;">📁 词条分组</span>
         <button class="add-sticker-btn" id="addPhraseGroupBtn" style="width: auto; padding: 6px 12px; margin: 0;">+ 新建分组</button>
       </div>
-      <div id="phraseGroupsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 12px;">
+        <button id="scrollGroupsLeft" style="flex-shrink:0;width:24px;height:24px;border-radius:50%;border:none;background:rgba(138,127,141,0.2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="向左滚动">◀</button>
+        <div id="phraseGroupsList" style="display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:8px;padding:4px 2px;width:100%;box-sizing:border-box;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:thin;"></div>
+        <button id="scrollGroupsRight" style="flex-shrink:0;width:24px;height:24px;border-radius:50%;border:none;background:rgba(138,127,141,0.2);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="向右滚动">▶</button>
+      </div>
     </div>
     
     <!-- 当前分组编辑区域 -->
@@ -7478,49 +7482,130 @@ if (this.appData.letterReplyScheduled) {
 renderPhraseGroupsUI() {
     const groupsList = document.getElementById('phraseGroupsList');
     if (!groupsList) return;
-    
+
+    // 确保容器为水平滚动模式
+    groupsList.style.display = 'flex';
+    groupsList.style.flexWrap = 'nowrap';
+    groupsList.style.overflowX = 'auto';
+    groupsList.style.overflowY = 'hidden';
+    groupsList.style.gap = '8px';
+    groupsList.style.padding = '4px 2px';
+    groupsList.style.width = '100%';
+    groupsList.style.boxSizing = 'border-box';
+    groupsList.style.scrollBehavior = 'smooth';
+    groupsList.style.WebkitOverflowScrolling = 'touch';
+    groupsList.style.scrollbarWidth = 'thin';
+
     const groups = this.appData.phraseGroups?.groups || [];
     groupsList.innerHTML = '';
-    
+
     groups.forEach(group => {
+        const isActive = this.appData.phraseGroups.currentGroupId === group.id;
         const groupTag = document.createElement('div');
-        groupTag.className = `group-tag ${this.appData.phraseGroups.currentGroupId === group.id ? 'active' : ''} ${!group.enabled ? 'disabled' : ''}`;
         groupTag.dataset.groupId = group.id;
-        
-        groupTag.innerHTML = `
-            <span class="group-status-badge"></span>
-            <span class="group-name">${this.escapeHtml(group.name)}</span>
-            <span class="group-count">${group.phrases?.length || 0}</span>
-            <div class="group-actions">
-                <button class="group-action-btn toggle-group" data-id="${group.id}" title="${group.enabled ? '禁用' : '启用'}">${group.enabled ? '🔛' : '🔒'}</button>
-                <button class="group-action-btn edit-group" data-id="${group.id}" title="编辑名称">✏️</button>
-            </div>
+        // 每个标签强制不换行、不压缩
+        groupTag.style.cssText = `
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: ${isActive ? 'var(--accent)' : 'rgba(138,127,141,0.15)'};
+            color: ${isActive ? 'white' : 'var(--text)'};
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border: 1px solid ${isActive ? 'var(--accent-light)' : 'transparent'};
+            opacity: ${group.enabled ? 1 : 0.5};
+            user-select: none;
         `;
-        
+
+        // 状态圆点
+        const statusDot = document.createElement('span');
+        statusDot.style.cssText = `
+            width: 8px; height: 8px; border-radius: 50%;
+            background: ${group.enabled ? 'var(--online)' : '#f44336'};
+            display: inline-block; flex-shrink: 0;
+        `;
+
+        // 分组名称
+        const nameSpan = document.createElement('span');
+        nameSpan.style.cssText = `
+            font-size: 0.8rem; font-weight: 500;
+            max-width: 80px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        `;
+        nameSpan.textContent = group.name;
+
+        // 数量标签
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText = `
+            font-size: 0.65rem; background: rgba(0,0,0,0.1);
+            padding: 1px 8px; border-radius: 12px; flex-shrink: 0;
+        `;
+        countSpan.textContent = group.phrases?.length || 0;
+
+        // 操作按钮容器
+        const actionsDiv = document.createElement('div');
+        actionsDiv.style.cssText = `display: inline-flex; gap: 2px; margin-left: 4px; flex-shrink: 0;`;
+
+        const btnBaseStyle = `
+            width: 18px; height: 18px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.08); cursor: pointer; font-size: 10px;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        `;
+
+        // 启用/禁用按钮
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'group-action-btn toggle-group';
+        toggleBtn.dataset.id = group.id;
+        toggleBtn.title = group.enabled ? '禁用' : '启用';
+        toggleBtn.style.cssText = btnBaseStyle;
+        toggleBtn.textContent = group.enabled ? '🔛' : '🔒';
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePhraseGroup(group.id);
+        });
+
+        // 编辑按钮
+        const editBtn = document.createElement('button');
+        editBtn.className = 'group-action-btn edit-group';
+        editBtn.dataset.id = group.id;
+        editBtn.title = '编辑名称';
+        editBtn.style.cssText = btnBaseStyle;
+        editBtn.textContent = '✏️';
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.editPhraseGroupName(group.id);
+        });
+
+        actionsDiv.appendChild(toggleBtn);
+        actionsDiv.appendChild(editBtn);
+        groupTag.appendChild(statusDot);
+        groupTag.appendChild(nameSpan);
+        groupTag.appendChild(countSpan);
+        groupTag.appendChild(actionsDiv);
+
         groupTag.addEventListener('click', (e) => {
-            if (e.target.classList.contains('group-action-btn')) return;
+            if (e.target.closest('.group-action-btn')) return;
             this.switchPhraseGroup(group.id);
         });
-        
+
         groupsList.appendChild(groupTag);
     });
-    
-    groupsList.querySelectorAll('.toggle-group').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const groupId = btn.dataset.id;
-            this.togglePhraseGroup(groupId);
-        });
-    });
-    
-    groupsList.querySelectorAll('.edit-group').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const groupId = btn.dataset.id;
-            this.editPhraseGroupName(groupId);
-        });
-    });
-    
+
+    // 绑定左右滚动按钮
+    const scrollLeftBtn = document.getElementById('scrollGroupsLeft');
+    const scrollRightBtn = document.getElementById('scrollGroupsRight');
+    if (scrollLeftBtn) {
+        scrollLeftBtn.onclick = () => groupsList.scrollBy({ left: -180, behavior: 'smooth' });
+    }
+    if (scrollRightBtn) {
+        scrollRightBtn.onclick = () => groupsList.scrollBy({ left: 180, behavior: 'smooth' });
+    }
+
     this.loadCurrentGroupToEditor();
     this.renderCardList();
     this._syncCurrentGroupImportExportUI();
