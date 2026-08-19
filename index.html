@@ -5282,7 +5282,8 @@ input:checked + .slider:before {
     </div>
     
     <div style="display: flex; gap: 10px; margin-top: 16px;">
-      <button class="cloud-btn" id="deduplicatePhrasesBtn" style="flex: 1; background: var(--accent); color: white;">🔍 查重并去重</button>
+      <button class="cloud-btn" id="deduplicatePhrasesBtn" style="flex: 1; background: var(--accent); color: white;">🔍 当前分组查重去重</button>
+      <button class="cloud-btn" id="deduplicateAllPhrasesBtn" style="flex: 1; background: #7a6d7e; color: white;">🗂️ 全部分组查重去重</button>
     </div>
 
     <!-- 当前分组操作区域 -->
@@ -8414,6 +8415,62 @@ deduplicateCurrentPhrases() {
         this.showNotification(`查重完成：在「${currentGroup.name}」中发现 ${duplicateCount} 条重复词条，已自动去重`);
     } else {
         this.showNotification(`「${currentGroup.name}」中未发现重复词条`);
+    }
+}
+
+/**
+ * 全局查重去重（跨所有分组）
+ * 策略：以第一次出现为准，后续分组中的重复项删除
+ */
+deduplicateAllPhrases() {
+    const groups = this.appData.phraseGroups?.groups;
+    if (!groups || groups.length === 0) {
+        this.showNotification('暂无分组数据');
+        return;
+    }
+
+    const globalSeen = new Set();
+    let totalRemoved = 0;
+    const removedDetail = [];
+
+    groups.forEach(group => {
+        const original = group.phrases || [];
+        const kept = [];
+        let removedInGroup = 0;
+        original.forEach(phrase => {
+            const key = phrase.trim().toLowerCase();
+            if (!key) return;
+            if (globalSeen.has(key)) {
+                removedInGroup++;
+            } else {
+                globalSeen.add(key);
+                kept.push(phrase.trim());
+            }
+        });
+        if (removedInGroup > 0) {
+            removedDetail.push(`「${group.name}」删除 ${removedInGroup} 条`);
+            totalRemoved += removedInGroup;
+        }
+        group.phrases = kept;
+    });
+
+    // 同步当前分组显示
+    const textarea = document.getElementById('phrasesTextarea');
+    const currentGroup = groups.find(g => g.id === this.appData.phraseGroups.currentGroupId);
+    if (textarea && currentGroup) {
+        textarea.value = currentGroup.phrases.join('\n');
+    }
+
+    this.updatePhraseCount();
+    this.renderPhraseGroupsUI();
+    this.renderCardList();
+    this.appData.responsePhrases = this.dataManager.getAllEnabledPhrases();
+    this.markDirty();
+
+    if (totalRemoved === 0) {
+        this.showNotification('全部分组无重复词条 🎉');
+    } else {
+        this.showNotification(`全局去重完成：共删除 ${totalRemoved} 条重复词条（${removedDetail.join('，')}）`);
     }
 }
 
@@ -11615,6 +11672,9 @@ if (savePhrasesBtn) savePhrasesBtn.addEventListener('click', () => this.saveCurr
 
 const deduplicatePhrasesBtn = document.getElementById('deduplicatePhrasesBtn');
 if (deduplicatePhrasesBtn) deduplicatePhrasesBtn.addEventListener('click', () => this.deduplicateCurrentPhrases());
+
+const deduplicateAllPhrasesBtn = document.getElementById('deduplicateAllPhrasesBtn');
+if (deduplicateAllPhrasesBtn) deduplicateAllPhrasesBtn.addEventListener('click', () => this.deduplicateAllPhrases());
 
 // 批量添加字卡按钮事件
 const batchAddConfirmBtn = document.getElementById('batchAddConfirmBtn');
