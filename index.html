@@ -5206,6 +5206,22 @@ input:checked + .slider:before {
     <p>对方将从这些词条中随机抽取作为回复。支持多分组管理，可分别启用/禁用。</p>
     <p style="font-size:0.75rem; color:#888; margin-bottom: 16px;">提示：点击任意消息可以引用or删除or撤回</p>
     
+    <!-- 全局搜索区域 -->
+    <div id="globalPhraseSearchArea" style="background:rgba(138,127,141,0.08);border-radius:12px;padding:12px;margin-bottom:16px;border:1px solid rgba(138,127,141,0.2);">
+      <div style="font-size:0.82rem;font-weight:600;color:#7a6d7e;margin-bottom:8px;">🔍 全局搜索（所有分组）</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <input type="text" id="globalPhraseSearchInput"
+          placeholder="搜索关键词，自动定位到所在分组…"
+          style="flex:1;border:1px solid rgba(138,127,141,0.4);border-radius:8px;padding:7px 10px;font-size:0.85rem;background:rgba(255,255,255,0.8);outline:none;color:#5c5c5c;"
+          oninput="window._chatAppRef?.onGlobalPhraseSearchInput()">
+        <button onclick="window._chatAppRef?.globalPhraseSearchPrev()"
+          style="padding:6px 10px;border:1px solid rgba(138,127,141,0.4);border-radius:8px;background:rgba(255,255,255,0.8);cursor:pointer;font-size:0.8rem;color:#8a7f8d;" title="上一条">▲</button>
+        <button onclick="window._chatAppRef?.globalPhraseSearchNext()"
+          style="padding:6px 10px;border:1px solid rgba(138,127,141,0.4);border-radius:8px;background:rgba(255,255,255,0.8);cursor:pointer;font-size:0.8rem;color:#8a7f8d;" title="下一条">▼</button>
+      </div>
+      <div id="globalPhraseSearchInfo" style="font-size:0.75rem;color:#a99cad;min-height:16px;line-height:1.5;"></div>
+    </div>
+
     <!-- 分组管理区域 -->
     <div class="group-management" style="margin-bottom: 20px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -7970,7 +7986,7 @@ renderCardList() {
         return;
     }
 
-    const keyword = (document.getElementById('phraseSearchInput')?.value || '').trim().toLowerCase();
+    const keyword = (this._globalHighlightKeyword || document.getElementById('phraseSearchInput')?.value || '').trim().toLowerCase();
     const matches = this._phraseSearchMatches || [];
     const matchIndexSet = new Set(matches.map(m => m.index));
 
@@ -8511,6 +8527,147 @@ _highlightPhraseMatch() {
         this.renderCardList();
         setTimeout(() => this.scrollToCard(match.index), 80);
     }
+}
+
+// ===================== 全局搜索（跨所有分组） =====================
+
+/** 全局搜索输入触发 */
+onGlobalPhraseSearchInput() {
+    this._globalPhraseSearchCursor = 0;
+    this._globalPhraseSearchMatches = [];
+    this._doGlobalLocatePhraseSearch(0);
+}
+
+/** 全局搜索 - 上一条 */
+globalPhraseSearchPrev() {
+    const matches = this._globalPhraseSearchMatches || [];
+    if (matches.length === 0) {
+        this._doGlobalLocatePhraseSearch(0);
+        return;
+    }
+    this._globalPhraseSearchCursor = (this._globalPhraseSearchCursor - 1 + matches.length) % matches.length;
+    this._applyGlobalPhraseMatch();
+}
+
+/** 全局搜索 - 下一条 */
+globalPhraseSearchNext() {
+    const matches = this._globalPhraseSearchMatches || [];
+    if (matches.length === 0) {
+        this._doGlobalLocatePhraseSearch(0);
+        return;
+    }
+    this._globalPhraseSearchCursor = (this._globalPhraseSearchCursor + 1) % matches.length;
+    this._applyGlobalPhraseMatch();
+}
+
+/**
+ * 全局搜索核心逻辑：遍历所有分组，收集所有匹配的字卡
+ */
+_doGlobalLocatePhraseSearch(cursor) {
+    const input  = document.getElementById('globalPhraseSearchInput');
+    const infoEl = document.getElementById('globalPhraseSearchInfo');
+    if (!input || !infoEl) return;
+
+    const keyword = input.value.trim();
+    if (!keyword) {
+        infoEl.textContent = '';
+        this._globalPhraseSearchMatches = [];
+        return;
+    }
+
+    const groups = this.appData.phraseGroups?.groups || [];
+    const lowerKw = keyword.toLowerCase();
+    const matches = [];
+
+    groups.forEach(group => {
+        (group.phrases || []).forEach((phrase, index) => {
+            if (phrase.toLowerCase().includes(lowerKw)) {
+                matches.push({ groupId: group.id, groupName: group.name, index, phrase });
+            }
+        });
+    });
+
+    this._globalPhraseSearchMatches = matches;
+    this._globalPhraseSearchCursor  = Math.max(0, Math.min(cursor || 0, matches.length - 1));
+
+    if (matches.length === 0) {
+        infoEl.innerHTML = `<span style="color:#c0392b;">未找到"${this.escapeHtml(keyword)}"</span>`;
+        return;
+    }
+
+    // 统计各分组命中数
+    const groupCount = {};
+    matches.forEach(m => {
+        groupCount[m.groupName] = (groupCount[m.groupName] || 0) + 1;
+    });
+    const summary = Object.entries(groupCount)
+        .map(([name, cnt]) => `${name}(${cnt})`)
+        .join(' · ');
+    infoEl.innerHTML = `<span style="color:#7cad80;">共 ${matches.length} 条匹配：${summary}</span>`;
+
+    this._applyGlobalPhraseMatch();
+}
+
+/**
+ * 跳转到当前全局匹配项：切换分组 + 高亮定位字卡
+ */
+_applyGlobalPhraseMatch() {
+    const matches = this._globalPhraseSearchMatches || [];
+    const infoEl  = document.getElementById('globalPhraseSearchInfo');
+    if (!matches.length) return;
+
+    const cur   = this._globalPhraseSearchCursor;
+    const match = matches[cur];
+    if (!match) return;
+
+    const keyword = (document.getElementById('globalPhraseSearchInput')?.value || '').trim();
+
+    // 更新提示文字
+    if (infoEl) {
+        const groupCount = {};
+        matches.forEach(m => { groupCount[m.groupName] = (groupCount[m.groupName] || 0) + 1; });
+        const summary = Object.entries(groupCount)
+            .map(([name, cnt]) => `${name}(${cnt})`)
+            .join(' · ');
+        infoEl.innerHTML =
+            `<span style="color:#7cad80;">共 ${matches.length} 条 | 第 ${cur + 1} 条 → 分组「${this.escapeHtml(match.groupName)}」第 ${match.index + 1} 项 | ${summary}</span>`;
+    }
+
+    // 如果不在目标分组，先切换（切换时会清空分组内搜索，无所谓）
+    if (this.appData.phraseGroups.currentGroupId !== match.groupId) {
+        this.appData.phraseGroups.currentGroupId = match.groupId;
+        // 清空分组内搜索框
+        const si = document.getElementById('phraseSearchInput');
+        const ii = document.getElementById('phraseSearchInfo');
+        if (si) si.value = '';
+        if (ii) ii.textContent = '';
+        this._phraseSearchMatches = [];
+        this._phraseSearchCursor  = 0;
+        this.renderPhraseGroupsUI();
+        this.loadCurrentGroupToEditor();
+        this._syncCurrentGroupImportExportUI();
+    }
+
+    // 滚动分组标签栏，将目标分组 tab 滚动到可见区域居中
+    setTimeout(() => {
+        const groupsList = document.getElementById('phraseGroupsList');
+        const activeTag  = groupsList?.querySelector(`[data-group-id="${match.groupId}"]`);
+        if (activeTag && groupsList) {
+            const containerWidth = groupsList.offsetWidth;
+            const tagLeft        = activeTag.offsetLeft;
+            const tagWidth       = activeTag.offsetWidth;
+            const scrollTarget   = tagLeft - (containerWidth / 2) + (tagWidth / 2);
+            groupsList.scrollTo({ left: Math.max(0, scrollTarget), behavior: 'smooth' });
+        }
+    }, 30);
+
+    // 高亮目标字卡
+    this._activeCardIndex = match.index;
+    // 临时借用分组内搜索关键词做高亮（不改输入框）
+    this._globalHighlightKeyword = keyword;
+    this.renderCardList();
+    this._globalHighlightKeyword = null;
+    setTimeout(() => this.scrollToCard(match.index), 80);
 }
     
     renderTarotUI() {
