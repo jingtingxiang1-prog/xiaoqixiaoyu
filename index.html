@@ -648,12 +648,12 @@ body {
 }
 
 .message {
-  position: relative !important;
-  line-height: 1.3 !important;
-  word-break: break-word !important;
-  overflow: visible !important;
-  width: fit-content !important;
-  max-width: 280px !important;
+  position: relative;
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: visible;
+  width: fit-content;
+  max-width: 280px;
   border-radius: 4px;
   box-shadow: none;
   padding: 8px 11px;
@@ -669,7 +669,7 @@ body {
   width: auto;
   min-width: 70%;
   color: #000;
-  background-color: #95ec69 !important;
+  background-color: #95ec69;
 }
 
 /* 对方发送的消息（白色气泡） */
@@ -681,11 +681,11 @@ body {
   width: auto;
   min-width: 70%;
   color: #000;
-  background-color: #ffffff !important;
+  background-color: #ffffff;
 }
 
-/* 箭头尾巴 - 自己发送（在右侧） */
-.message.self::after {
+/* 箭头尾巴 - 自己发送（在右侧；仅在未使用自定义气泡样式时生效，避免垫在用户贴图下面出现色边） */
+body:not(.bubble-custom-on) .message.self::after {
   content: "";
   position: absolute;
   width: 9px;
@@ -697,8 +697,8 @@ body {
   transform: translateY(-50%) rotate(45deg);
 }
 
-/* 箭头尾巴 - 对方发送（在左侧） */
-.message.other::after {
+/* 箭头尾巴 - 对方发送（在左侧；仅在未使用自定义气泡样式时生效） */
+body:not(.bubble-custom-on) .message.other::after {
   content: "";
   position: absolute;
   width: 9px;
@@ -3025,6 +3025,400 @@ input:checked + .slider:before {
   display: flex; align-items: center; justify-content: center; cursor: zoom-out;
 }
 .poll-img-viewer img { max-width: 94vw; max-height: 90vh; object-fit: contain; border-radius: 6px; }
+
+/* ====================== 气泡样式设置模块 ====================== */
+.bubble-style-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bubble-css-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.bubble-css-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  border: 1px solid rgba(138, 127, 141, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  font-family: 'Courier New', Courier, monospace;
+  color: #444;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 1.6;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.bubble-css-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(138, 127, 141, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 气泡预览区域 */
+.bubble-preview-area {
+  background: rgba(191, 191, 191, 0.35);
+  background-image: radial-gradient(#ffffff44 2px, transparent 2px);
+  background-size: 20px 20px;
+  border-radius: 12px;
+  padding: 56px 48px;
+  border: 1px solid rgba(138, 127, 141, 0.2);
+  overflow: visible;
+}
+
+.bubble-preview-title {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* 预览消息行 */
+.bubble-preview-row {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 60px;
+  gap: 8px;
+  position: relative;
+  overflow: visible;
+}
+
+.bubble-preview-row:last-child {
+  margin-bottom: 0;
+}
+
+.bubble-preview-row.self {
+  flex-direction: row-reverse;
+}
+
+.bubble-preview-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: white;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubble-preview-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bubble-preview-avatar .default-icon {
+  width: 100%;
+  height: 100%;
+  background: rgba(138, 127, 141, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--accent);
+}
+
+/* 预览气泡容器 - 允许 ::before/::after 超出边界 */
+.bubble-preview-wrap {
+  overflow: visible;
+  position: relative;
+}
+
+/* 预览气泡 - 默认继承主题变量 */
+.bubble-preview-wrap .message {
+  max-width: 72%;
+  padding: 8px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  word-wrap: break-word;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  overflow: visible;
+  position: relative;
+}
+
+.bubble-preview-wrap .message.self {
+  background: var(--msg-self, #dedede);
+  border-bottom-right-radius: 4px;
+}
+
+.bubble-preview-wrap .message.other {
+  background: var(--msg-other, #f2f2f2);
+  border-bottom-left-radius: 4px;
+}
+
+/* 气泡样式按钮区域 */
+.bubble-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.bubble-apply-btn {
+  flex: 2;
+  padding: 11px 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  letter-spacing: 0.5px;
+}
+
+.bubble-apply-btn:hover {
+  background: var(--accent-light);
+}
+
+.bubble-apply-btn:active {
+  transform: scale(0.97);
+}
+
+.bubble-reset-btn {
+  flex: 1;
+  padding: 11px 0;
+  border: 1px solid rgba(138, 127, 141, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--accent);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bubble-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 气泡样式快捷预设 */
+.bubble-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bubble-preset-tag {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(138, 127, 141, 0.12);
+  border: 1px solid rgba(138, 127, 141, 0.25);
+  font-size: 0.78rem;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bubble-preset-tag:hover {
+  background: rgba(138, 127, 141, 0.22);
+  border-color: var(--accent);
+}
+
+.bubble-preset-tag.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* 自定义预设标签 */
+.bubble-preset-tag.custom {
+  position: relative;
+  padding-right: 8px;
+}
+
+.bubble-preset-tag .preset-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.bubble-preset-tag .preset-action-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.15);
+  color: inherit;
+  font-size: 0.55rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.bubble-preset-tag .preset-action-btn:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+.bubble-preset-tag.active .preset-action-btn {
+  background: rgba(255,255,255,0.3);
+}
+
+.bubble-preset-tag.active .preset-action-btn:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+/* 保存预设按钮 */
+.bubble-save-preset-btn {
+  flex: 1.5;
+  padding: 11px 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  letter-spacing: 0.5px;
+}
+
+.bubble-save-preset-btn:hover {
+  background: var(--accent-light);
+}
+
+.bubble-save-preset-btn:active {
+  transform: scale(0.97);
+}
+
+/* 导入/导出按钮 */
+.bubble-import-btn, .bubble-export-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: 1px solid rgba(138, 127, 141, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--accent);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bubble-import-btn:hover, .bubble-export-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 预设命名弹窗 */
+.bubble-preset-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubble-preset-dialog {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.bubble-preset-dialog h3 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.bubble-preset-dialog input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid rgba(138,127,141,0.3);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.bubble-preset-dialog input:focus {
+  border-color: var(--accent);
+}
+
+.bubble-preset-dialog .dialog-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.bubble-preset-dialog .dialog-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.bubble-preset-dialog .dialog-btn.primary {
+  background: var(--accent);
+  color: white;
+}
+
+.bubble-preset-dialog .dialog-btn.secondary {
+  background: rgba(138,127,141,0.12);
+  color: var(--accent);
+}
+
+/* 气泡样式提示信息 */
+.bubble-tip-box {
+  background: rgba(138, 127, 141, 0.08);
+  border-left: 3px solid var(--accent-light);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #888;
+  line-height: 1.7;
+}
+
+/* 夜间模式适配 */
+.night-mode .bubble-css-textarea {
+  background: rgba(40, 36, 44, 0.8);
+  color: #ccc;
+  border-color: rgba(100, 90, 110, 0.4);
+}
+
+.night-mode .bubble-preview-area {
+  background: rgba(20, 18, 24, 0.6);
+}
+
+.night-mode .bubble-tip-box {
+  background: rgba(255,255,255,0.04);
+  color: #888;
+}
+/* ====================== 气泡样式设置模块结束 ====================== */
+
+/* 气泡样式模块：收起状态功能栏与 6没加状态卡链接版 一致（12px 内边距 / 0.875rem 字号） */
+#section-bubble .settings-section-header {
+  padding: 12px 18px;
+  font-size: 0.875rem;
+}
 
 /* ========== 修改移动端响应式设计，确保输入框和按钮在一行 ========== */
 @media (max-width: 768px) {
@@ -6205,6 +6599,7 @@ input:checked + .slider:before {
 <script src="https://cdn.jsdelivr.net/npm/push-plugin@1.0.9/dist/push-plugin.min.js"></script>
 <body>
 <!-- 气泡自定义样式注入点（由JS动态更新） -->
+<style id="bubbleCustomStyle"></style>
 <!-- 背景图片容器 -->
 <div class="background-container" id="backgroundContainer"></div>
 
@@ -6399,6 +6794,7 @@ input:checked + .slider:before {
     <!-- 新增拍一拍设置标签 -->
     <button class="tab-button" data-tab="poke">👋 拍一拍设置</button>
     <button class="tab-button" data-tab="letter">✉️ 写信收信</button>
+    <button class="tab-button" data-tab="bubble">💬 气泡样式</button>
     <button class="tab-button" data-tab="keepalive">🎵 后台保活</button>
     <button class="tab-button" data-tab="data">数据管理</button>
     <button class="tab-button" data-tab="notification-simple">🔔 消息通知</button>
@@ -7159,6 +7555,110 @@ input:checked + .slider:before {
 </div>
 
 
+    <!-- ===== 气泡样式设置模块 ===== -->
+<div class="settings-section-card" id="section-bubble" data-tab="bubble">
+  <div class="settings-section-header collapsed" onclick="toggleSection('bubble')">
+    <span>💬 气泡样式</span>
+    <i class="material-icons" id="icon-bubble">expand_more</i>
+  </div>
+  <div class="settings-section-content collapsed" id="content-bubble">
+    <div class="bubble-style-editor">
+
+      <!-- 快捷预设 -->
+      <div>
+        <label class="bubble-css-label">✨ 快捷预设</label>
+        <div class="bubble-presets" id="bubblePresets">
+          <span class="bubble-preset-tag active" data-preset="default">默认</span>
+        </div>
+      </div>
+
+      <!-- 自定义CSS输入 -->
+      <div>
+        <label class="bubble-css-label" for="bubbleCSSInput">📝 自定义 CSS 代码</label>
+        <textarea class="bubble-css-textarea" id="bubbleCSSInput" placeholder=".message.self {
+  background: #ffd6e0;
+  border-radius: 18px 18px 4px 18px;
+}
+.message.other {
+  background: #e8f4fd;
+  border-radius: 18px 18px 18px 4px;
+}"></textarea>
+      </div>
+
+      <!-- 万能识别提示 -->
+      <div style="margin:-4px 0 8px; padding:8px 12px; background:rgba(138,127,141,0.08); border-left:3px solid var(--accent); border-radius:8px; font-size:0.78rem; color:var(--text); line-height:1.6;">
+        ✨ <b>直接粘贴任意气泡代码即可，无需专门转换</b>——无论是哪种写法、什么类名，这里都会自动精准识别并转换为可用的气泡样式。
+      </div>
+
+      <!-- 实时预览 -->
+      <div>
+        <label class="bubble-css-label">👁️ 实时预览</label>
+        <style id="bubblePreviewStyle"></style>
+        <div class="bubble-preview-area" id="bubblePreviewWrap">
+          <div class="bubble-preview-title">预览效果（左方=对方 / 右方=自己）</div>
+          <div class="bubble-preview-row other">
+            <div class="bubble-preview-avatar">
+              <div class="default-icon" id="bubblePreviewAvatarOther">👤</div>
+            </div>
+            <div class="bubble-preview-wrap">
+              <div class="message other">好久不见，最近怎么样？😊</div>
+            </div>
+          </div>
+          <div class="bubble-preview-row self">
+            <div class="bubble-preview-avatar">
+              <div class="default-icon" id="bubblePreviewAvatarSelf">🙋</div>
+            </div>
+            <div class="bubble-preview-wrap">
+              <div class="message self">挺好的！你呢，最近有啥新鲜事吗~</div>
+            </div>
+          </div>
+          <div class="bubble-preview-row other">
+            <div class="bubble-preview-avatar">
+              <div class="default-icon">👤</div>
+            </div>
+            <div class="bubble-preview-wrap">
+              <div class="message other">我刚换了新发型，感觉超棒的！</div>
+            </div>
+          </div>
+          <div class="bubble-preview-row self">
+            <div class="bubble-preview-avatar">
+              <div class="default-icon">🙋</div>
+            </div>
+            <div class="bubble-preview-wrap">
+              <div class="message self">哇，发照片看看！💕</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="bubble-btn-row">
+        <button class="bubble-apply-btn" id="applyBubbleCSSBtn">✅ 应用到聊天界面</button>
+        <button class="bubble-save-preset-btn" id="saveBubblePresetBtn">💾 保存预设</button>
+        <button class="bubble-reset-btn" id="resetBubbleCSSBtn">🔄 重置默认</button>
+      </div>
+      <div class="bubble-btn-row">
+        <button class="bubble-import-btn" id="importBubblePresetBtn">📥 导入预设</button>
+        <button class="bubble-export-btn" id="exportBubblePresetBtn">📤 导出预设</button>
+        <input type="file" id="importBubbleFileInput" accept=".json" style="display:none;">
+      </div>
+
+      <!-- 使用说明 -->
+      <div class="bubble-tip-box">
+        💡 使用说明：<br>
+        • 输入 CSS 后右侧预览实时更新<br>
+        • 点击「应用到聊天界面」立即替换聊天气泡样式<br>
+        • 任意气泡代码都能自动精准识别并转换（背景/颜色/渐变/贴图/圆角/边框等全自动应用）<br>
+        • 点击「重置默认」可恢复原始气泡样式<br>
+        • 样式与预设会随「数据管理 · 全部备份」一起导出/导入<br>
+        • 样式会自动保存，刷新页面后仍然生效
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ===== 气泡样式设置模块结束 ===== -->
+
     <!-- ===== 后台保活模块 ===== -->
     <div class="settings-section-card" id="section-keepalive" data-tab="keepalive">
       <div class="settings-section-header collapsed" onclick="toggleSection('keepalive')">
@@ -7637,6 +8137,9 @@ this.PENDING_LETTER_ID_KEY = 'seven_and_wish_pending_letter_id';
         // 选1选：设置与预设 / 梦角发送调度计划
         this.POLL_SETTINGS_KEY = 'seven_and_wish_poll_settings';
         this.POLL_AUTO_SCHEDULE_KEY = 'seven_and_wish_poll_auto_schedule';
+        // 气泡样式：正在使用的样式 / 自定义预设
+        this.BUBBLE_STYLE_KEY = 'seven_and_wish_bubble_style';
+        this.BUBBLE_PRESETS_KEY = 'seven_and_wish_bubble_presets';
         this.DATA_VERSION = '2.0'; // 第二个文件的版本
         
         // 最大消息数量限制（防止数据过大）
@@ -7845,6 +8348,24 @@ this.PENDING_LETTER_ID_KEY = 'seven_and_wish_pending_letter_id';
 
     savePollAutoSchedule(sched) {
         return this.setStoredData(this.POLL_AUTO_SCHEDULE_KEY, sched === undefined ? null : sched);
+    }
+
+    // ---- 气泡样式设置 ----
+    getBubbleStyle() {
+        return this.getStoredData(this.BUBBLE_STYLE_KEY) || { css: '' };
+    }
+
+    saveBubbleStyle(styleData) {
+        return this.setStoredData(this.BUBBLE_STYLE_KEY, styleData);
+    }
+
+    // ---- 自定义气泡预设 ----
+    getBubblePresets() {
+        return this.getStoredData(this.BUBBLE_PRESETS_KEY) || [];
+    }
+
+    saveBubblePresets(presets) {
+        return this.setStoredData(this.BUBBLE_PRESETS_KEY, presets);
     }
     
     /**
@@ -8530,6 +9051,10 @@ this.appData.pendingLetterId = this.dataManager.getPendingLetterId ? this.dataMa
 this.appData.pollSettings = this.dataManager.getPollSettings() || null;
 this.appData.pollAutoSchedule = this.dataManager.getPollAutoSchedule() || null;
 
+// ===== 气泡样式：加载正在使用的样式与自定义预设 =====
+this.appData.bubbleStyle = this.dataManager.getBubbleStyle();
+this.appData.bubblePresets = this.dataManager.getBubblePresets();
+
 // 如果之前有未完成的定时回复，重新启动定时器
 if (this.appData.letterReplyScheduled) {
     const timeRemaining = this.appData.letterReplyScheduled - Date.now();
@@ -8688,6 +9213,11 @@ if (this.appData.letterReplyScheduled) {
         }
         // ===== 初始化后台保活UI控制器 =====
         this.initBackgroundKeepAlive();
+
+        // ===== 气泡样式UI初始化 =====
+        this.initBubbleCSSSettingsUI();
+        // 页面加载时应用已保存的气泡CSS（静默，不弹提示）
+        this.applyBubbleCSS(this.appData.bubbleStyle?.css || '', false);
 
         // 6. 显示加载成功通知
         this.showNotification('聊天记录已加载');
@@ -14486,6 +15016,8 @@ const delay = minDelay + Math.random() * (maxDelay - minDelay);
             todayDate: this.appData.todayDate,
             pollSettings: this.appData.pollSettings || null,          // 选1选：设置与预设问题
             pollAutoSchedule: this.appData.pollAutoSchedule || null,  // 选1选：梦角发送调度计划
+            bubbleStyle: this.appData.bubbleStyle || { css: '' },     // 正在使用的气泡样式
+            bubblePresets: this.appData.bubblePresets || [],          // 保存的气泡预设
             keepAliveEnabled: window._appIDB ? (window._appIDB.get('keep_alive_enabled') || null) : null  // 后台保活开关状态
         };
 
@@ -14662,6 +15194,20 @@ if (importAllBtn) {
                         if (backup.appData.keepAliveEnabled !== undefined && window._appIDB) {
                             window._appIDB.set('keep_alive_enabled', backup.appData.keepAliveEnabled || 'false');
                         }
+
+                        // 气泡样式设置（正在使用的样式）
+                        if (backup.appData.bubbleStyle) {
+                            this.appData.bubbleStyle = backup.appData.bubbleStyle;
+                            this.dataManager.saveBubbleStyle(this.appData.bubbleStyle);
+                            this.applyBubbleCSS(this.appData.bubbleStyle?.css || '', false);
+                        }
+
+                        // 气泡样式预设
+                        if (backup.appData.bubblePresets) {
+                            this.appData.bubblePresets = backup.appData.bubblePresets;
+                            this.dataManager.saveBubblePresets(this.appData.bubblePresets);
+                            this.renderCustomPresets();
+                        }
                     }
                     
                     // 重新渲染所有UI
@@ -14804,6 +15350,8 @@ if (importAllBtn) {
             this._setIDB(idb, dm.TODAY_DATE_KEY, this.appData.todayDate),
             this._setIDB(idb, dm.POLL_SETTINGS_KEY, this.appData.pollSettings || null),
             this._setIDB(idb, dm.POLL_AUTO_SCHEDULE_KEY, this.appData.pollAutoSchedule || null),
+            this._setIDB(idb, dm.BUBBLE_STYLE_KEY, this.appData.bubbleStyle || { css: '' }),
+            this._setIDB(idb, dm.BUBBLE_PRESETS_KEY, this.appData.bubblePresets || []),
         ]);
     }
 
@@ -15624,6 +16172,82 @@ setInterval(() => {
             saveUserInfoBtn.addEventListener('click', () => this.saveUserInfo());
         }
 
+        // ========== 气泡样式设置事件监听（从 10.html 移植） ==========
+        const bubbleCSSInput = document.getElementById('bubbleCSSInput');
+        if (bubbleCSSInput) {
+            bubbleCSSInput.addEventListener('input', () => {
+                this.updateBubblePreview(bubbleCSSInput.value);
+                this._updateActiveBubblePresetTag(bubbleCSSInput.value);
+            });
+        }
+
+        const applyBubbleBtn = document.getElementById('applyBubbleCSSBtn');
+        if (applyBubbleBtn) {
+            applyBubbleBtn.addEventListener('click', () => {
+                const css = document.getElementById('bubbleCSSInput')?.value || '';
+                this.applyBubbleCSS(css, true);
+            });
+        }
+
+        const resetBubbleBtn = document.getElementById('resetBubbleCSSBtn');
+        if (resetBubbleBtn) {
+            resetBubbleBtn.addEventListener('click', () => this.resetBubbleCSS());
+        }
+
+        const savePresetBtn = document.getElementById('saveBubblePresetBtn');
+        if (savePresetBtn) {
+            savePresetBtn.addEventListener('click', () => this.saveBubblePreset());
+        }
+
+        const exportBubbleBtn = document.getElementById('exportBubblePresetBtn');
+        if (exportBubbleBtn) {
+            exportBubbleBtn.addEventListener('click', () => this.exportBubblePresets());
+        }
+
+        const importBubbleBtn = document.getElementById('importBubblePresetBtn');
+        const importBubbleFileInput = document.getElementById('importBubbleFileInput');
+        if (importBubbleBtn && importBubbleFileInput) {
+            importBubbleBtn.addEventListener('click', () => importBubbleFileInput.click());
+            importBubbleFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    this.importBubblePresets(file);
+                    importBubbleFileInput.value = '';
+                }
+            });
+        }
+
+        const bubblePresetContainer = document.getElementById('bubblePresets');
+        if (bubblePresetContainer) {
+            bubblePresetContainer.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('.delete-btn');
+                if (deleteBtn) {
+                    const tag = deleteBtn.closest('.bubble-preset-tag.custom');
+                    if (tag) { e.stopPropagation(); this.deleteBubblePreset(tag.getAttribute('data-preset-id')); }
+                    return;
+                }
+                const renameBtn = e.target.closest('.rename-btn');
+                if (renameBtn) {
+                    const tag = renameBtn.closest('.bubble-preset-tag.custom');
+                    if (tag) { e.stopPropagation(); this.renameBubblePreset(tag.getAttribute('data-preset-id')); }
+                    return;
+                }
+                const defaultTag = e.target.closest('.bubble-preset-tag[data-preset="default"]');
+                if (defaultTag) {
+                    const textarea = document.getElementById('bubbleCSSInput');
+                    if (textarea) textarea.value = '';
+                    this.updateBubblePreview('');
+                    this.applyBubbleCSS('', true);
+                    this._updateActiveBubblePresetTag('');
+                    return;
+                }
+                const customTag = e.target.closest('.bubble-preset-tag.custom');
+                if (customTag) {
+                    this.loadBubblePreset(customTag.getAttribute('data-preset-id'));
+                }
+            });
+        }
+
         // ========== 新增：初始化表情包选择器 ==========
         this.initStickerPicker();
 
@@ -15998,6 +16622,725 @@ const delay = minDelay + Math.random() * (maxDelay - minDelay);
         this.appData.musicTimer = setInterval(() => this.simulateMusicPlay(), checkInterval);
     }
     
+    // ========================
+    // 气泡样式设置功能（从 10.html 移植）
+    // ========================
+
+    /**
+     * 初始化气泡样式设置UI
+     */
+    initBubbleCSSSettingsUI() {
+        const textarea = document.getElementById('bubbleCSSInput');
+        if (!textarea) return;
+
+        // 填入已保存的CSS
+        const savedCSS = this.appData.bubbleStyle?.css || '';
+        textarea.value = savedCSS;
+
+        // 更新预览头像
+        this._updateBubblePreviewAvatars();
+
+        // 初始化预览
+        this.updateBubblePreview(savedCSS);
+
+        // 渲染自定义预设标签
+        this.renderCustomPresets();
+
+        // 更新激活的预设标签
+        this._updateActiveBubblePresetTag(savedCSS);
+    }
+
+    /**
+     * 在预览中显示用户头像
+     */
+    _updateBubblePreviewAvatars() {
+        const selfAvatar = this.appData.selfInfo?.avatar;
+        const otherAvatar = this.appData.otherInfo?.avatar;
+
+        document.querySelectorAll('#bubblePreviewAvatarSelf').forEach(el => {
+            el.innerHTML = selfAvatar
+                ? `<img src="${selfAvatar}" alt="self">`
+                : '🙋';
+        });
+        document.querySelectorAll('#bubblePreviewAvatarOther').forEach(el => {
+            el.innerHTML = otherAvatar
+                ? `<img src="${otherAvatar}" alt="other">`
+                : '👤';
+        });
+    }
+
+    /**
+     * 将CSS作用域化，仅影响预览区域（支持 ::before / ::after 伪元素）
+     */
+    _scopeCSSForPreview(css) {
+        if (!css || !css.trim()) return '';
+        let result = '';
+        let i = 0;
+        const len = css.length;
+        while (i < len) {
+            let braceIdx = css.indexOf('{', i);
+            if (braceIdx === -1) break;
+            const selectorBlock = css.slice(i, braceIdx);
+            let depth = 1;
+            let j = braceIdx + 1;
+            while (j < len && depth > 0) {
+                if (css[j] === '{') depth++;
+                else if (css[j] === '}') depth--;
+                j++;
+            }
+            const ruleBody = css.slice(braceIdx, j);
+            const scopedSelector = selectorBlock
+                .split(',')
+                .map(s => {
+                    const trimmed = s.trim();
+                    if (!trimmed) return '';
+                    if (trimmed === ':root' || trimmed.startsWith(':root')) return trimmed;
+                    return `#bubblePreviewWrap ${trimmed}`;
+                })
+                .filter(Boolean)
+                .join(', ');
+            result += scopedSelector + ' ' + ruleBody + '\n';
+            i = j;
+        }
+        return result;
+    }
+
+    /**
+     * 将用户 CSS 中的各种气泡选择器规范化为实际聊天 HTML 使用的类名。
+     * 支持几十种市面常见写法：标准 / 收发 / 气泡 / 左右 / 人称 / 方向命名等；
+     * 先用占位符保护已是标准形式的 .message.other / .message.self，避免被同义词二次改写。
+     */
+    _normalizeBubbleCSS(css) {
+        if (!css) return '';
+        const PROT_O = '@@BUBBLE_STD_OTHER@@';
+        const PROT_S = '@@BUBBLE_STD_SELF@@';
+        let out = css
+            .replace(/\.message\.other\b/g, PROT_O)
+            .replace(/\.message\.self\b/g, PROT_S);
+        const pairs = [
+            // —— 对方（左侧 / 接收）——
+            [/\.message-received\b/g, PROT_O],
+            [/\.message-other\b/g, PROT_O],
+            [/\.msg-received\b/g, PROT_O],
+            [/\.msg-other\b/g, PROT_O],
+            [/\.bubble-received\b/g, PROT_O],
+            [/\.bubble-other\b/g, PROT_O],
+            [/\.bubble-left\b/g, PROT_O],
+            [/\.left-bubble\b/g, PROT_O],
+            [/\.msg-left\b/g, PROT_O],
+            [/\.left-msg\b/g, PROT_O],
+            [/\.chat-left\b/g, PROT_O],
+            [/\.talk-left\b/g, PROT_O],
+            [/\.sms-in\b/g, PROT_O],
+            [/\.in-message\b/g, PROT_O],
+            [/\.other-message\b/g, PROT_O],
+            [/\.other-msg\b/g, PROT_O],
+            [/\.receive-msg\b/g, PROT_O],
+            [/\.friend-bubble\b/g, PROT_O],
+            [/\.them-bubble\b/g, PROT_O],
+            [/\.from-them\b/g, PROT_O],
+            [/\.incoming\b/g, PROT_O],
+            [/\.receiver\b/g, PROT_O],
+            [/\.bubble\.left\b/g, PROT_O],
+            [/\.chat-bubble\.left\b/g, PROT_O],
+            [/\.chat-message\.left\b/g, PROT_O],
+            [/\.message\.left\b/g, PROT_O],
+            [/\.msg\.left\b/g, PROT_O],
+            [/\.msg\.in\b/g, PROT_O],
+            [/\.them\b/g, PROT_O],
+            [/\.other\b/g, PROT_O],
+            // —— 自己（右侧 / 发送）——
+            [/\.message-sent\b/g, PROT_S],
+            [/\.message-self\b/g, PROT_S],
+            [/\.msg-sent\b/g, PROT_S],
+            [/\.msg-self\b/g, PROT_S],
+            [/\.bubble-sent\b/g, PROT_S],
+            [/\.bubble-self\b/g, PROT_S],
+            [/\.bubble-right\b/g, PROT_S],
+            [/\.right-bubble\b/g, PROT_S],
+            [/\.msg-right\b/g, PROT_S],
+            [/\.right-msg\b/g, PROT_S],
+            [/\.chat-right\b/g, PROT_S],
+            [/\.talk-right\b/g, PROT_S],
+            [/\.sms-out\b/g, PROT_S],
+            [/\.out-message\b/g, PROT_S],
+            [/\.my-message\b/g, PROT_S],
+            [/\.self-message\b/g, PROT_S],
+            [/\.my-msg\b/g, PROT_S],
+            [/\.self-msg\b/g, PROT_S],
+            [/\.send-msg\b/g, PROT_S],
+            [/\.my-bubble\b/g, PROT_S],
+            [/\.me-bubble\b/g, PROT_S],
+            [/\.from-me\b/g, PROT_S],
+            [/\.outgoing\b/g, PROT_S],
+            [/\.sender\b/g, PROT_S],
+            [/\.bubble\.right\b/g, PROT_S],
+            [/\.chat-bubble\.right\b/g, PROT_S],
+            [/\.chat-message\.right\b/g, PROT_S],
+            [/\.message\.right\b/g, PROT_S],
+            [/\.msg\.right\b/g, PROT_S],
+            [/\.msg\.out\b/g, PROT_S],
+            [/\.me\b/g, PROT_S],
+            [/\.self\b/g, PROT_S]
+        ];
+        pairs.forEach(function (p) { out = out.replace(p[0], p[1]); });
+        return out.split(PROT_O).join('.message.other').split(PROT_S).join('.message.self');
+    }
+
+    /**
+     * 气泡 CSS 预处理管线（万能识别版）：
+     * 剥离 style/HTML 标签（内联样式先收集）→ 选择器规范化（几十种市面常见格式）
+     * → 已识别出标准选择器时，再抢救未映射的共用样式与伪元素尾巴（保证外观不丢）
+     * → 完全无标准选择器时，走万能提取：任意乱七八糟的类名也能按评分+顺序拆出双方气泡
+     */
+    _prepareBubbleCSS(css) {
+        if (!css || !css.trim()) return '';
+        let src = String(css);
+        // 所有 <style> 标签：全部替换为其内容（支持多段）
+        src = src.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '\n$1\n');
+        // 先收集 HTML 内联气泡样式（之后标签会被剥离）
+        const inlineRules = this._collectInlineBubbleStyles(src);
+        // 混入的 HTML 标签：直接剥离
+        if (/<[a-z!\/][\s\S]*>/i.test(src)) src = src.replace(/<[^>]*>/g, '');
+        let out = this._normalizeBubbleCSS(src);
+        if (/\.message\.(self|other)/.test(out)) {
+            const rescue = this._rescueUnmappedBubbleRules(out);
+            return (rescue.prefix || '') + out + (rescue.suffix || '');
+        }
+        const extracted = this._extractBubbleCSS(src, inlineRules);
+        if (extracted) return extracted;
+        return out;
+    }
+
+    /**
+     * 气泡外观评分：判断一条规则"像不像对话气泡"（背景/圆角/阴影权重高）
+     */
+    _bubbleScore(body) {
+        if (!body) return 0;
+        let s = 0;
+        if (/background(-color|-image)?\s*:/i.test(body)) s += 3;
+        if (/border-radius\s*:/i.test(body)) s += 3;
+        if (/box-shadow\s*:/i.test(body)) s += 2;
+        if (/(^|;)\s*border(-top|-bottom|-left|-right)?\s*:/i.test(body)) s += 1;
+        if (/(^|;)\s*color\s*:/i.test(body)) s += 1;
+        if (/(^|;)\s*padding(-top|-bottom|-left|-right)?\s*:/i.test(body)) s += 1;
+        if (/backdrop-filter\s*:/i.test(body)) s += 1;
+        return s;
+    }
+
+    /**
+     * 从 HTML 片段里收集内联 style 的气泡样式（粘贴整段网页代码也能识别）
+     * 方向线索：float / margin auto / align-self / text-align
+     */
+    _collectInlineBubbleStyles(html) {
+        const out = [];
+        if (!html || !/<[a-z][^>]*\bstyle\s*=/i.test(html)) return out;
+        const re = /<([a-z][a-z0-9-]*)\b([^>]*)>/gi;
+        let m;
+        while ((m = re.exec(html)) !== null) {
+            const attrs = m[2] || '';
+            const sm = attrs.match(/style\s*=\s*(?:"([^"]*)"|'([^']*)')/i);
+            if (!sm) continue;
+            const body = (sm[1] !== undefined ? sm[1] : (sm[2] || '')).trim();
+            if (!body || this._bubbleScore(body) < 2) continue;
+            let side = null;
+            if (/(float\s*:\s*right|margin-left\s*:\s*auto|align-self\s*:\s*(?:flex-)?end|text-align\s*:\s*right)/i.test(body)) side = 'self';
+            else if (/(float\s*:\s*left|margin-right\s*:\s*auto|align-self\s*:\s*(?:flex-)?start)/i.test(body)) side = 'other';
+            out.push({ body: body, side: side, pseudo: null, order: out.length });
+        }
+        return out;
+    }
+
+    /**
+     * 抢救 pass：规范化后仍未映射到 .message.self/.other 的规则里，
+     * 把"气泡共用基础样式"（类名含 bubble/chat/msg/message/balloon）与伪元素尾巴
+     * （::before/::after，类名含 bubble/chat/msg/.../tip/tail/arrow）补到双方气泡上，
+     * 保证共用底图、贴图、小尾巴不丢失。共用样式前置，保证左右各自的覆盖仍生效。
+     */
+    _rescueUnmappedBubbleRules(css) {
+        const res = { prefix: '', suffix: '' };
+        if (!css) return res;
+        try {
+            const re = /([^{}]+)\{([^{}]*)\}/g;
+            let m;
+            const sharedBase = [];
+            const pseudos = [];
+            while ((m = re.exec(css)) !== null) {
+                const rawSel = (m[1] || '').trim();
+                const body = (m[2] || '').trim();
+                if (!rawSel || !body) continue;
+                if (rawSel.charAt(0) === '@') continue;
+                if (/^(:root|:host|body|html|\*)\b/i.test(rawSel)) continue;
+                if (/:hover|:focus|:active|:visited/i.test(rawSel)) continue;
+                const parts = rawSel.split(',').map(s => s.trim()).filter(Boolean);
+                if (!parts.length) continue;
+                if (parts.every(s => /^\.message\.(self|other)\b/.test(s))) continue; // 已全部映射，无需抢救
+                const pm = rawSel.match(/::?(before|after)\b/i);
+                if (pm) {
+                    if (!/(content|background|border|width|height|transform)/i.test(body)) continue;
+                    if (!/(bubble|chat|msg|message|balloon|tip|tail|arrow)/i.test(rawSel)) continue;
+                    pseudos.push({ pseudo: pm[1].toLowerCase(), body: body });
+                } else {
+                    if (this._bubbleScore(body) < 2) continue;
+                    if (!/(bubble|chat|msg|message|balloon)/i.test(rawSel)) continue;
+                    sharedBase.push(body);
+                }
+            }
+            if (sharedBase.length) {
+                res.prefix = '.message.self, .message.other {\n  ' + sharedBase.join(';\n  ') + '\n}\n';
+            }
+            if (pseudos.length) {
+                let s = '';
+                pseudos.forEach(r => {
+                    s += '.message.self::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                    s += '.message.other::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                });
+                res.suffix = s;
+            }
+            return res;
+        } catch (e) {
+            return res;
+        }
+    }
+
+    /**
+     * 万能气泡提取：类名再乱也能拆出双方气泡。
+     * - 解析全部规则（含 ::before / ::after 尾巴、贴图 background-image、CSS 变量）
+     * - 方向判断：类名/注释中文线索 → HTML 内联样式线索 → 兜底按"气泡感评分 + 出现顺序"
+     *   （评分并列时靠后的两条分别作为对方/自己，更早出现的视为双方共用样式）
+     * - 共用样式与共用尾巴同时应用到双方；:root 中的 CSS 变量保留在双方气泡上
+     * - 基础样式自动丢弃 position/width/margin 等破坏聊天布局的属性，伪元素尾巴原样保留
+     */
+    _extractBubbleCSS(css, inlineRules) {
+        css = css || '';
+        inlineRules = inlineRules || [];
+        if (!css && !inlineRules.length) return '';
+        try {
+            const OTHER_RX = /(left|them|other|incom|recv|receiv|reciev|friend|guest|对方|接收|收信|来信|左侧|左边|左)/i;
+            const SELF_RX = /(right|self|sent|outgo|mine|myself|自己|我的|发信|发送|右侧|右边|右)/i;
+            const ME_RX = /(^|[^a-z])(me|my)([^a-z]|$)/i;
+            const SHORT_O_RX = /[.\s>~+,]l(?![a-zA-Z0-9_-])/i;   /* 独立类名 l = left */
+            const SHORT_R_RX = /[.\s>~+,]r(?![a-zA-Z0-9_-])/i;   /* 独立类名 r = right */
+            const JUNK_RX = /(avatar|icon|photo|logo|button|btn|input|textarea|navbar|nav|header|footer|sidebar|scrollbar|tooltip|badge|close|delete|menu)/i;
+            const DROP_RX = /^(position|float|display|width|height|max-width|min-width|max-height|min-height|margin|margin-top|margin-bottom|margin-left|margin-right|top|left|right|bottom|z-index|overflow|flex|flex-grow|flex-shrink|flex-basis|grid|align-items|justify-content|clear|content)\s*:/i;
+            const rules = [];
+            let order = 0;
+            const re = /([^{}]+)\{([^{}]*)\}/g;
+            let m;
+            while ((m = re.exec(css)) !== null) {
+                const rawSel = (m[1] || '').trim();
+                const body = (m[2] || '').trim();
+                if (!rawSel || !body) continue;
+                if (rawSel.charAt(0) === '@') continue;
+                // :root / :host 里的 CSS 变量：保留（改挂到气泡上，避免污染全局）
+                if (/^(:root|:host)\b/.test(rawSel)) {
+                    const vars = body.split(';').map(s => s.trim()).filter(d => d.indexOf('--') === 0);
+                    if (vars.length) rules.push({ body: vars.join(';'), side: 'vars', pseudo: null, score: 0, order: order++ });
+                    continue;
+                }
+                if (/:hover|:focus|:active|:visited/i.test(rawSel)) continue;
+                if (/^(body|html|\*)\s*[,{]/i.test(rawSel) || /^(body|html|\*)$/i.test(rawSel)) continue;
+                // 规则前的中文注释（如「/* 对方 */」）作为方向线索
+                let comment = '';
+                const before = css.slice(Math.max(0, m.index - 160), m.index);
+                const cm = before.match(/\/\*([^*]*)\*\/\s*$/);
+                if (cm) comment = cm[1];
+                rawSel.split(',').map(s => s.trim()).filter(Boolean).forEach(sel => {
+                    let pseudo = null;
+                    let base = sel;
+                    const pm = sel.match(/::?(before|after)\b/i);
+                    if (pm) {
+                        pseudo = pm[1].toLowerCase();
+                        base = sel.slice(0, pm.index).trim() || '*';
+                    }
+                    if (JUNK_RX.test(base)) return;
+                    const hint = base + ' ' + comment;
+                    const isO = OTHER_RX.test(hint) || SHORT_O_RX.test(base);
+                    const isS = SELF_RX.test(hint) || ME_RX.test(hint) || SHORT_R_RX.test(base);
+                    let side = null;
+                    if (isO && !isS) side = 'other';
+                    else if (isS && !isO) side = 'self';
+                    const score = this._bubbleScore(body);
+                    rules.push({ body: body, side: side, pseudo: pseudo, score: score, order: order++ });
+                });
+            }
+            inlineRules.forEach(r => rules.push({ body: r.body, side: r.side, pseudo: null, score: this._bubbleScore(r.body), order: order++ }));
+            if (!rules.length) return '';
+
+            /* —— 基础规则分边 —— */
+            const bases = rules.filter(r => !r.pseudo && r.side !== 'vars' && r.score >= 2);
+            const hasO = bases.some(r => r.side === 'other');
+            const hasS = bases.some(r => r.side === 'self');
+            const unknowns = bases.filter(r => !r.side);
+            if ((!hasO || !hasS) && unknowns.length) {
+                // 评分优先、并列取靠后的（共用基础样式通常写在前面，左右变体写在后面）
+                const ranked = unknowns.slice().sort((a, b) => (b.score - a.score) || (b.order - a.order));
+                if (!hasO && !hasS) {
+                    if (ranked.length === 1) {
+                        ranked[0].side = 'shared';
+                    } else {
+                        const p1 = ranked[0], p2 = ranked[1];
+                        const first = p1.order < p2.order ? p1 : p2;
+                        const second = p1.order < p2.order ? p2 : p1;
+                        first.side = 'other';
+                        second.side = 'self';
+                        ranked.slice(2).forEach(r => { r.side = 'shared'; });
+                    }
+                } else if (!hasO) {
+                    ranked[0].side = 'other';
+                    ranked.slice(1).forEach(r => { r.side = 'shared'; });
+                } else {
+                    ranked[0].side = 'self';
+                    ranked.slice(1).forEach(r => { r.side = 'shared'; });
+                }
+            }
+            // 其余无方向的作为双方共用样式
+            bases.forEach(r => { if (!r.side) r.side = 'shared'; });
+
+            const shared = bases.filter(r => r.side === 'shared').map(r => r.body);
+            const otherB = bases.filter(r => r.side === 'other').map(r => r.body);
+            const selfB = bases.filter(r => r.side === 'self').map(r => r.body);
+            const varsB = rules.filter(r => r.side === 'vars').map(r => r.body);
+
+            /* —— 伪元素尾巴分边（无方向的尾巴同时给双方）—— */
+            const pseudos = rules.filter(r => r.pseudo && /(content|background|border|width|height|transform)/i.test(r.body));
+
+            const clean = (body) => body.split(';')
+                .map(s => s.trim())
+                .filter(Boolean)
+                .filter(decl => !DROP_RX.test(decl))
+                .join(';\n  ');
+
+            let out = '';
+            if (varsB.length) {
+                out += '.message.self, .message.other {\n  ' + varsB.join(';\n  ') + '\n}\n';
+            }
+            if (shared.length) {
+                out += '.message.self, .message.other {\n  ' + clean(shared.join(';\n  ')) + '\n}\n';
+            }
+            if (otherB.length) out += '.message.other {\n  ' + clean(otherB.join(';\n  ')) + '\n}\n';
+            if (selfB.length) out += '.message.self {\n  ' + clean(selfB.join(';\n  ')) + '\n}\n';
+            pseudos.forEach(r => {
+                if (r.side === 'other') {
+                    out += '.message.other::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                } else if (r.side === 'self') {
+                    out += '.message.self::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                } else {
+                    out += '.message.self::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                    out += '.message.other::' + r.pseudo + ' {\n  ' + r.body + '\n}\n';
+                }
+            });
+            out = out.trim();
+            /* 至少要能拆出一方气泡才返回，否则交回上层 */
+            return (otherB.length || selfB.length) ? out : '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    /**
+     * 实时更新预览区域的气泡样式
+     */
+    updateBubblePreview(css) {
+        const previewStyle = document.getElementById('bubblePreviewStyle');
+        if (!previewStyle) return;
+        previewStyle.textContent = this._scopeCSSForPreview(this._prepareBubbleCSS(css));
+    }
+
+    /**
+     * 将CSS应用到聊天界面（实时替换）
+     */
+    applyBubbleCSS(css, showTip) {
+        const customStyle = document.getElementById('bubbleCustomStyle');
+        if (customStyle) {
+            customStyle.textContent = this._prepareBubbleCSS(css);
+        }
+        // 自定义气泡样式生效期间隐藏默认小尾巴（避免默认尾巴的底色垫在用户贴图下面出现白边/绿边）
+        document.body.classList.toggle('bubble-custom-on', !!(css && css.trim()));
+        if (!this.appData.bubbleStyle) this.appData.bubbleStyle = {};
+        this.appData.bubbleStyle.css = css || '';
+        this.dataManager.saveBubbleStyle(this.appData.bubbleStyle);
+
+        if (showTip) {
+            this.showNotification(css ? '💬 气泡样式已应用！' : '🔄 气泡样式已重置为默认');
+        }
+    }
+
+    /**
+     * 重置气泡样式为默认
+     */
+    resetBubbleCSS() {
+        const textarea = document.getElementById('bubbleCSSInput');
+        if (textarea) textarea.value = '';
+        this.updateBubblePreview('');
+        this.applyBubbleCSS('', true);
+        this._updateActiveBubblePresetTag('');
+    }
+
+    /**
+     * 获取所有自定义预设
+     */
+    _getCustomPresets() {
+        return this.appData.bubblePresets || [];
+    }
+
+    /**
+     * 保存自定义预设到数据
+     */
+    _saveCustomPresets(presets) {
+        this.appData.bubblePresets = presets;
+        this.dataManager.saveBubblePresets(presets);
+    }
+
+    /**
+     * 渲染自定义预设标签到预设区域
+     */
+    renderCustomPresets() {
+        const container = document.getElementById('bubblePresets');
+        if (!container) return;
+
+        // 移除旧的自定义标签
+        container.querySelectorAll('.bubble-preset-tag.custom').forEach(el => el.remove());
+
+        const presets = this._getCustomPresets();
+        presets.forEach(preset => {
+            const tag = document.createElement('span');
+            tag.className = 'bubble-preset-tag custom';
+            tag.setAttribute('data-preset-id', preset.id);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'preset-name';
+            nameSpan.textContent = preset.name;
+
+            const actions = document.createElement('span');
+            actions.className = 'preset-actions';
+            actions.innerHTML = `
+                <button class="preset-action-btn rename-btn" title="重命名">✏️</button>
+                <button class="preset-action-btn delete-btn" title="删除">✕</button>
+            `;
+
+            tag.appendChild(nameSpan);
+            tag.appendChild(actions);
+            container.appendChild(tag);
+        });
+    }
+
+    /**
+     * 保存当前CSS为预设
+     */
+    saveBubblePreset() {
+        const textarea = document.getElementById('bubbleCSSInput');
+        const css = textarea?.value || '';
+
+        this._showPresetDialog('保存预设', '请输入预设名称', '', (name) => {
+            if (!name.trim()) {
+                this.showNotification('⚠️ 预设名称不能为空');
+                return;
+            }
+
+            const presets = this._getCustomPresets();
+            const newPreset = {
+                id: 'preset_' + Date.now(),
+                name: name.trim(),
+                css: css,
+                createdAt: Date.now()
+            };
+
+            presets.push(newPreset);
+            this._saveCustomPresets(presets);
+            this.renderCustomPresets();
+            this._updateActiveBubblePresetTag(css, newPreset.id);
+
+            this.applyBubbleCSS(css, false);
+            this.showNotification(`💾 预设「${name.trim()}」已保存并应用！`);
+        });
+    }
+
+    /**
+     * 删除预设
+     */
+    deleteBubblePreset(presetId) {
+        if (!confirm('确定要删除这个预设吗？')) return;
+
+        const presets = this._getCustomPresets();
+        const idx = presets.findIndex(p => p.id === presetId);
+        if (idx === -1) return;
+
+        const name = presets[idx].name;
+        presets.splice(idx, 1);
+        this._saveCustomPresets(presets);
+        this.renderCustomPresets();
+        this.showNotification(`🗑️ 预设「${name}」已删除`);
+    }
+
+    /**
+     * 重命名预设
+     */
+    renameBubblePreset(presetId) {
+        const presets = this._getCustomPresets();
+        const preset = presets.find(p => p.id === presetId);
+        if (!preset) return;
+
+        this._showPresetDialog('重命名预设', '请输入新名称', preset.name, (name) => {
+            if (!name.trim()) {
+                this.showNotification('⚠️ 预设名称不能为空');
+                return;
+            }
+
+            preset.name = name.trim();
+            this._saveCustomPresets(presets);
+            this.renderCustomPresets();
+            this.showNotification(`✏️ 预设已重命名为「${name.trim()}」`);
+        });
+    }
+
+    /**
+     * 加载预设CSS到输入框并应用
+     */
+    loadBubblePreset(presetId) {
+        const presets = this._getCustomPresets();
+        const preset = presets.find(p => p.id === presetId);
+        if (!preset) return;
+
+        const textarea = document.getElementById('bubbleCSSInput');
+        if (textarea) textarea.value = preset.css;
+        this.updateBubblePreview(preset.css);
+        this.applyBubbleCSS(preset.css, true);
+        this._updateActiveBubblePresetTag(preset.css, presetId);
+    }
+
+    /**
+     * 导出所有自定义预设为JSON文件
+     */
+    exportBubblePresets() {
+        const presets = this._getCustomPresets();
+        if (presets.length === 0) {
+            this.showNotification('⚠️ 暂无可导出的预设');
+            return;
+        }
+
+        const data = {
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            presets: presets.map(p => ({ name: p.name, css: p.css }))
+        };
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        a.href = url;
+        a.download = `气泡样式预设_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.showNotification(`📤 已导出 ${presets.length} 个预设`);
+    }
+
+    /**
+     * 导入预设从JSON文件
+     */
+    importBubblePresets(file) {
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!data.presets || !Array.isArray(data.presets)) {
+                    this.showNotification('⚠️ 文件格式不正确');
+                    return;
+                }
+
+                const existingPresets = this._getCustomPresets();
+                const existingNames = new Set(existingPresets.map(p => p.name));
+
+                let importedCount = 0;
+                data.presets.forEach(p => {
+                    if (!p.name || typeof p.css === 'undefined') return;
+
+                    let name = p.name;
+                    let counter = 1;
+                    while (existingNames.has(name)) {
+                        name = `${p.name}(${counter})`;
+                        counter++;
+                    }
+                    existingNames.add(name);
+
+                    existingPresets.push({
+                        id: 'preset_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+                        name: name,
+                        css: p.css || '',
+                        createdAt: Date.now()
+                    });
+                    importedCount++;
+                });
+
+                this._saveCustomPresets(existingPresets);
+                this.renderCustomPresets();
+                this.showNotification(`📥 成功导入 ${importedCount} 个预设`);
+            } catch (err) {
+                this.showNotification('⚠️ 文件解析失败，请确认是有效的JSON文件');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    /**
+     * 显示预设命名/重命名弹窗
+     */
+    _showPresetDialog(title, placeholder, defaultValue, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'bubble-preset-dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'bubble-preset-dialog';
+        dialog.innerHTML = `
+            <h3>${title}</h3>
+            <input type="text" placeholder="${placeholder}" value="${defaultValue}">
+            <div class="dialog-btns">
+                <button class="dialog-btn secondary cancel-btn">取消</button>
+                <button class="dialog-btn primary confirm-btn">确认</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const input = dialog.querySelector('input');
+        const confirmBtn = dialog.querySelector('.confirm-btn');
+        const cancelBtn = dialog.querySelector('.cancel-btn');
+
+        setTimeout(() => input.focus(), 100);
+
+        const close = () => document.body.removeChild(overlay);
+
+        confirmBtn.addEventListener('click', () => { onConfirm(input.value); close(); });
+        cancelBtn.addEventListener('click', close);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { onConfirm(input.value); close(); }
+            else if (e.key === 'Escape') close();
+        });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    }
+
+    /**
+     * 更新激活的预设标签高亮
+     */
+    _updateActiveBubblePresetTag(css, activePresetId) {
+        document.querySelectorAll('.bubble-preset-tag').forEach(tag => {
+            const isDefault = tag.getAttribute('data-preset') === 'default';
+            const presetId = tag.getAttribute('data-preset-id');
+            const isActive = activePresetId
+                ? presetId === activePresetId
+                : (isDefault && !css);
+            tag.classList.toggle('active', isActive);
+        });
+    }
+
     showNotification(message) {
         // 网页内提示（保留）
         const existing = document.querySelector('.notification');
