@@ -6872,6 +6872,22 @@ input:checked + .slider:before {
           <button class="group-member-delete" id="deleteGroupBtn" style="display: none;">删除分组</button>
         </div>
       </div>
+      <!-- 多选批量删除：入口按钮 -->
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+        <button id="cardMultiSelectToggleBtn"
+          style="padding:6px 12px;border:1px solid rgba(138,127,141,0.4);border-radius:8px;background:rgba(255,255,255,0.7);cursor:pointer;font-size:0.8rem;color:#8a7f8d;"
+          title="勾选多条字卡后一次性删除">☑️ 多选删除</button>
+      </div>
+      <!-- 多选批量删除：操作工具条（进入多选模式后显示） -->
+      <div id="cardMultiSelectBar" style="display:none;gap:8px;align-items:center;margin-bottom:10px;background:rgba(138,127,141,0.12);border-radius:10px;padding:8px 10px;flex-wrap:wrap;">
+        <span id="cardMultiSelectHint" style="font-size:0.75rem;color:#8a7f8d;flex:1;min-width:80px;">已选 0 条</span>
+        <button id="cardSelectAllBtn"
+          style="padding:5px 10px;border:1px solid rgba(138,127,141,0.4);border-radius:8px;background:rgba(255,255,255,0.75);cursor:pointer;font-size:0.78rem;color:#5c5c5c;">全选</button>
+        <button id="cardDeleteSelectedBtn"
+          style="padding:5px 10px;border:none;border-radius:8px;background:rgba(244,67,54,0.85);cursor:pointer;font-size:0.78rem;color:#fff;font-weight:500;">🗑️ 删除所选 (0)</button>
+        <button id="cardExitMultiSelectBtn"
+          style="padding:5px 10px;border:1px solid rgba(138,127,141,0.4);border-radius:8px;background:rgba(255,255,255,0.75);cursor:pointer;font-size:0.78rem;color:#888;">✖ 退出多选</button>
+      </div>
       <!-- 词条搜索区域 -->
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:10px;">
         <input type="text" id="phraseSearchInput"
@@ -10103,10 +10119,18 @@ renderCardList() {
     const matches = this._phraseSearchMatches || [];
     const matchIndexSet = new Set(matches.map(m => m.index));
 
+    // 记录旧列表滚动位置，重渲染后恢复（防止删除字卡后列表跳回顶部）
+    const prevList = container.querySelector('.card-list');
+    const prevScrollTop = prevList ? prevList.scrollTop : 0;
+
+    const multi = !!this._cardMultiSelect;
+    if (!this._cardSelected) this._cardSelected = new Set();
+
     let html = '<ul class="card-list" style="list-style:none;margin:0;padding:0;max-height:220px;overflow-y:auto;border-radius:10px;">';
     phrases.forEach((phrase, index) => {
         const isActive = this._activeCardIndex === index;
         const isMatch  = matchIndexSet.has(index);
+        const isSelected = multi && this._cardSelected.has(index);
 
         // 关键词高亮
         let displayText = this.escapeHtml(phrase);
@@ -10115,29 +10139,46 @@ renderCardList() {
             displayText = displayText.replace(re, m => `<mark style="background:#ffe082;border-radius:3px;padding:0 1px;">${m}</mark>`);
         }
 
+        // 多选模式：显示勾选圆圈，隐藏编辑/删除按钮
+        const checkboxHtml = multi
+            ? `<span style="width:20px;height:20px;border-radius:50%;border:2px solid ${isSelected ? 'var(--accent,#8a7f8d)' : 'rgba(138,127,141,0.5)'};background:${isSelected ? 'var(--accent,#8a7f8d)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.72rem;color:#fff;font-weight:bold;">${isSelected ? '✓' : ''}</span>`
+            : '';
+        const btnHtml = multi ? '' : `
+            <button class="card-edit-btn" data-index="${index}"
+              style="padding:2px 8px;border:none;border-radius:6px;background:rgba(138,127,141,0.2);cursor:pointer;font-size:0.75rem;white-space:nowrap;flex-shrink:0;">编辑</button>
+            <button class="card-delete-btn" data-index="${index}"
+              style="padding:2px 8px;border:none;border-radius:6px;background:rgba(244,67,54,0.12);cursor:pointer;font-size:0.75rem;white-space:nowrap;flex-shrink:0;color:#c62828;">×</button>`;
+
         html += `
           <li class="card-item${isActive ? ' active' : ''}${isMatch ? ' matched' : ''}"
               data-index="${index}"
               style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;cursor:pointer;
                      transition:background 0.15s;margin-bottom:3px;
-                     background:${isActive ? 'rgba(138,127,141,0.15)' : isMatch ? 'rgba(255,224,130,0.18)' : 'rgba(255,255,255,0.35)'};
-                     border-left:${isActive ? '3px solid var(--accent)' : '3px solid transparent'};">
+                     background:${isSelected ? 'rgba(138,127,141,0.28)' : isActive ? 'rgba(138,127,141,0.15)' : isMatch ? 'rgba(255,224,130,0.18)' : 'rgba(255,255,255,0.35)'};
+                     border-left:${isActive || isSelected ? '3px solid var(--accent)' : '3px solid transparent'};">
+            ${checkboxHtml}
             <span style="min-width:22px;font-size:0.7rem;color:#aaa;text-align:right;">${index + 1}</span>
             <span style="flex:1;font-size:0.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${displayText}</span>
-            <button class="card-edit-btn" data-index="${index}"
-              style="padding:2px 8px;border:none;border-radius:6px;background:rgba(138,127,141,0.2);cursor:pointer;font-size:0.75rem;white-space:nowrap;flex-shrink:0;">编辑</button>
-            <button class="card-delete-btn" data-index="${index}"
-              style="padding:2px 8px;border:none;border-radius:6px;background:rgba(244,67,54,0.12);cursor:pointer;font-size:0.75rem;white-space:nowrap;flex-shrink:0;color:#c62828;">×</button>
+            ${btnHtml}
           </li>`;
     });
     html += '</ul>';
     container.innerHTML = html;
+
+    // 恢复滚动位置（防止重渲染后跳回顶部，方便继续删除周围字卡）
+    const newList = container.querySelector('.card-list');
+    if (newList) newList.scrollTop = prevScrollTop;
 
     // 绑定事件
     container.querySelectorAll('.card-item').forEach(item => {
         const idx = parseInt(item.dataset.index);
         item.addEventListener('click', (e) => {
             if (e.target.closest('.card-edit-btn') || e.target.closest('.card-delete-btn')) return;
+            if (this._cardMultiSelect) {
+                // 多选模式：点击 = 勾选/取消勾选
+                this._cardToggleSelected(idx);
+                return;
+            }
             this._activeCardIndex = idx;
             this.renderCardList();
             this.scrollToCard(idx);
@@ -10257,6 +10298,117 @@ deleteCardAtIndex(index) {
     this.updatePhraseCount();
     this.markDirty();
     this.showNotification('字卡已删除');
+}
+
+// ===================== 字卡多选批量删除 =====================
+
+/**
+ * 进入/退出多选模式
+ * enable 不传时切换状态；true=强制进入；false=强制退出
+ */
+toggleCardMultiSelect(enable) {
+    const target = (enable === true || enable === false) ? enable : !this._cardMultiSelect;
+    this._cardMultiSelect = target;
+    if (!target) this._cardSelected = new Set();
+    this._updateMultiSelectBar();
+    this.renderCardList();
+}
+
+/** 勾选/取消勾选某条字卡 */
+_cardToggleSelected(index) {
+    if (!this._cardSelected) this._cardSelected = new Set();
+    if (this._cardSelected.has(index)) {
+        this._cardSelected.delete(index);
+    } else {
+        this._cardSelected.add(index);
+    }
+    this._updateMultiSelectBar();
+    this.renderCardList();
+}
+
+/** 全选/取消全选（已全选时点它=清空选择） */
+cardSelectAllToggle() {
+    const currentGroup = this.appData.phraseGroups?.groups?.find(
+        g => g.id === this.appData.phraseGroups.currentGroupId
+    );
+    if (!currentGroup) return;
+    const total = (currentGroup.phrases || []).length;
+    if (!this._cardSelected) this._cardSelected = new Set();
+    if (this._cardSelected.size >= total) {
+        this._cardSelected.clear();
+    } else {
+        this._cardSelected = new Set();
+        for (let i = 0; i < total; i++) this._cardSelected.add(i);
+    }
+    this._updateMultiSelectBar();
+    this.renderCardList();
+}
+
+/** 更新多选工具条的显示状态和计数 */
+_updateMultiSelectBar() {
+    const bar = document.getElementById('cardMultiSelectBar');
+    const hint = document.getElementById('cardMultiSelectHint');
+    const delBtn = document.getElementById('cardDeleteSelectedBtn');
+    const selAllBtn = document.getElementById('cardSelectAllBtn');
+    const n = this._cardSelected ? this._cardSelected.size : 0;
+    if (bar) {
+        bar.style.display = this._cardMultiSelect ? 'flex' : 'none';
+    }
+    if (hint) hint.textContent = this._cardMultiSelect ? `已选 ${n} 条` : '';
+    if (delBtn) {
+        delBtn.textContent = `🗑️ 删除所选 (${n})`;
+        delBtn.disabled = n === 0;
+        delBtn.style.opacity = n === 0 ? '0.5' : '1';
+    }
+    if (selAllBtn) selAllBtn.textContent = '全选';
+}
+
+/** 批量删除所选字卡（从大索引往小索引删，避免索引错位） */
+deleteSelectedCards() {
+    const currentGroup = this.appData.phraseGroups?.groups?.find(
+        g => g.id === this.appData.phraseGroups.currentGroupId
+    );
+    if (!currentGroup) return;
+    if (!this._cardSelected || this._cardSelected.size === 0) {
+        this.showNotification('请先勾选要删除的字卡');
+        return;
+    }
+    const count = this._cardSelected.size;
+    if (!confirm(`确定删除所选的 ${count} 条字卡吗？`)) return;
+
+    // 记录最小索引，删除后视图锚定到这个位置
+    const indices = Array.from(this._cardSelected).sort((a, b) => b - a);
+    const minIdx = indices[indices.length - 1];
+    indices.forEach(i => currentGroup.phrases.splice(i, 1));
+
+    this._cardSelected = new Set();
+    this._activeCardIndex = Math.min(minIdx, currentGroup.phrases.length - 1);
+    this.appData.responsePhrases = this.dataManager.getAllEnabledPhrases();
+    // 同步 textarea
+    const textarea = document.getElementById('phrasesTextarea');
+    if (textarea) textarea.value = (currentGroup.phrases || []).join('\n');
+    // 重算当前分组搜索匹配（保持高亮不错位）
+    const kwEl = document.getElementById('phraseSearchInput');
+    const kw = (kwEl?.value || '').trim();
+    if (kw) {
+        const lowerKw = kw.toLowerCase();
+        const ms = [];
+        (currentGroup.phrases || []).forEach((p, i) => {
+            if (p.toLowerCase().includes(lowerKw)) ms.push({ index: i, phrase: p });
+        });
+        this._phraseSearchMatches = ms;
+        if (this._phraseSearchCursor >= ms.length) {
+            this._phraseSearchCursor = Math.max(0, ms.length - 1);
+        }
+    }
+    this._updateMultiSelectBar();
+    this.renderCardList();
+    this.updatePhraseCount();
+    this.markDirty();
+    this.showNotification(`已删除 ${count} 条字卡`);
+    if (this._activeCardIndex >= 0) {
+        setTimeout(() => this.scrollToCard(this._activeCardIndex), 30);
+    }
 }
 
 /**
@@ -15594,6 +15746,19 @@ if (deduplicateAllPhrasesBtn) deduplicateAllPhrasesBtn.addEventListener('click',
 // 批量添加字卡按钮事件
 const batchAddConfirmBtn = document.getElementById('batchAddConfirmBtn');
 if (batchAddConfirmBtn) batchAddConfirmBtn.addEventListener('click', () => this.batchAddPhrases());
+
+// 字卡多选批量删除按钮事件
+const cardMultiSelectToggleBtn = document.getElementById('cardMultiSelectToggleBtn');
+if (cardMultiSelectToggleBtn) cardMultiSelectToggleBtn.addEventListener('click', () => this.toggleCardMultiSelect());
+
+const cardSelectAllBtn = document.getElementById('cardSelectAllBtn');
+if (cardSelectAllBtn) cardSelectAllBtn.addEventListener('click', () => this.cardSelectAllToggle());
+
+const cardDeleteSelectedBtn = document.getElementById('cardDeleteSelectedBtn');
+if (cardDeleteSelectedBtn) cardDeleteSelectedBtn.addEventListener('click', () => this.deleteSelectedCards());
+
+const cardExitMultiSelectBtn = document.getElementById('cardExitMultiSelectBtn');
+if (cardExitMultiSelectBtn) cardExitMultiSelectBtn.addEventListener('click', () => this.toggleCardMultiSelect(false));
 
 // 批量添加输入框：Enter换行不提交（默认行为即可），无需额外处理
 
